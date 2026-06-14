@@ -7,6 +7,8 @@
     indexes: null,
     file: null,
     detectedEncoding: 'UTF8',
+    selectedColumns: new Set(),
+    isProcessing: false,
     lastErrors: [],
     lastLogCsv: '',
   };
@@ -14,11 +16,17 @@
   const els = {
     file: document.getElementById('csvFile'),
     fileName: document.getElementById('fileName'),
-    runButton: document.getElementById('runButton'),
+    dropZone: document.getElementById('dropZone'),
+    openColumnModal: document.getElementById('openColumnModal'),
+    columnModal: document.getElementById('columnModal'),
+    closeColumnModal: document.getElementById('closeColumnModal'),
+    applyColumnModal: document.getElementById('applyColumnModal'),
+    selectAllColumns: document.getElementById('selectAllColumns'),
+    clearAllColumns: document.getElementById('clearAllColumns'),
+    columnList: document.getElementById('columnList'),
+    columnSummary: document.getElementById('columnSummary'),
     downloadLink: document.getElementById('downloadLink'),
     downloadLogButton: document.getElementById('downloadLogButton'),
-    inputEncoding: document.getElementById('inputEncoding'),
-    outputEncoding: document.getElementById('outputEncoding'),
     status: document.getElementById('status'),
     summary: document.getElementById('summary'),
     errorSection: document.getElementById('errorSection'),
@@ -30,7 +38,7 @@
   async function init() {
     bindEvents();
     try {
-      setStatus('マスタと変換設定を読み込んでいます...');
+      setStatus('マスタを読み込んでいます...');
       const [mastersRes, configRes] = await Promise.all([
         fetch('data/masters.json'),
         fetch('data/transform-config.json'),
@@ -40,11 +48,11 @@
       state.masters = await mastersRes.json();
       state.config = await configRes.json();
       state.indexes = buildIndexes(state.masters.masters);
-      const masterCount = Object.keys(state.masters.masters || {}).length;
-      const mappingCount = state.config.mappings.length;
-      const sjisStatus = hasEncodingLib() ? 'Shift_JIS入出力対応' : 'Shift_JIS出力にはencoding-japaneseの読み込みが必要です';
-      setStatus(`準備完了。マスタ${masterCount}種、変換設定${mappingCount}件を読み込みました。\n${sjisStatus}`);
-      updateRunButton();
+      state.selectedColumns = new Set(state.config.mappings.map(m => m.inputColumn));
+      renderColumnSelector();
+      updateColumnSummary();
+      const sjisStatus = hasEncodingLib() ? '準備完了。CSVをアップロードしてください。' : '準備完了。ただし、Shift_JIS出力には外部ライブラリの読み込みが必要です。';
+      setStatus(sjisStatus);
     } catch (err) {
       console.error(err);
       setStatus(`初期化エラー: ${err.message}`);
@@ -53,17 +61,53 @@
 
   function bindEvents() {
     els.file.addEventListener('change', () => {
-      state.file = els.file.files && els.file.files[0] ? els.file.files[0] : null;
-      els.fileName.textContent = state.file ? `${state.file.name} (${formatBytes(state.file.size)})` : '未選択';
-      clearResult();
-      updateRunButton();
+      const file = els.file.files && els.file.files[0] ? els.file.files[0] : null;
+      if (file) handleFileSelected(file);
     });
-    els.runButton.addEventListener('click', runConversion);
     els.downloadLogButton.addEventListener('click', () => downloadLogCsv());
+
+    els.openColumnModal.addEventListener('click', openColumnModal);
+    els.closeColumnModal.addEventListener('click', closeColumnModal);
+    els.applyColumnModal.addEventListener('click', closeColumnModal);
+    els.columnModal.addEventListener('click', (ev) => {
+      if (ev.target && ev.target.matches('[data-close-modal]')) closeColumnModal();
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') closeColumnModal();
+    });
+    els.selectAllColumns.addEventListener('click', () => setAllColumns(true));
+    els.clearAllColumns.addEventListener('click', () => setAllColumns(false));
+
+    ['dragenter', 'dragover'].forEach(type => {
+      els.dropZone.addEventListener(type, (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        els.dropZone.classList.add('dragOver');
+      });
+    });
+    ['dragleave', 'drop'].forEach(type => {
+      els.dropZone.addEventListener(type, (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        els.dropZone.classList.remove('dragOver');
+      });
+    });
+    els.dropZone.addEventListener('drop', (ev) => {
+      const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0] ? ev.dataTransfer.files[0] : null;
+      if (file) handleFileSelected(file);
+    });
   }
 
-  function updateRunButton() {
-    els.runButton.disabled = !(state.file && state.masters && state.config && state.indexes);
+  function handleFileSelected(file) {
+    state.file = file;
+    els.fileName.textContent = `${file.name} (${formatBytes(file.size)})`;
+    els.file.value = '';
+    clearResult();
+    if (!state.masters || !state.config || !state.indexes) {
+      setStatus('マスタ読み込み後に自動変換します。');
+      return;
+    }
+    runConversion();
   }
 
   function clearResult() {
@@ -78,14 +122,15 @@
   }
 
   async function runConversion() {
-    clearResult();
-    els.runButton.disabled = true;
+    if (!state.file || state.isProcessing) return;
+    state.isProcessing = true;
     try {
+      clearResult();
       setStatus('CSVを読み込んでいます...');
       const direction = getRadioValue('direction');
       const outputMode = getRadioValue('outputMode');
-      const requestedInputEncoding = els.inputEncoding.value;
-      const requestedOutputEncoding = els.outputEncoding.value;
+      const requestedInputEncoding = 'auto';
+      const requestedOutputEncoding = 'same';
 
       const buffer = await state.file.arrayBuffer();
       const readResult = decodeArrayBuffer(buffer, requestedInputEncoding);
@@ -101,7 +146,7 @@
       const suffix = direction === 'decode' ? 'decoded' : 'encoded';
       const outputName = makeOutputName(state.file.name, suffix, outputEncoding);
 
-      setDownload(blob, outputName);
+      setDownload(blob, outputName, true);
       renderSummary({
         inputRows: parsed.rows.length,
         inputCols: parsed.headers.length,
@@ -112,18 +157,70 @@
         outputEncoding,
       });
       renderErrors(result.errors);
-      setStatus(`変換完了。入力文字コード: ${displayEncoding(state.detectedEncoding)} / 出力文字コード: ${displayEncoding(outputEncoding)}`);
+      setStatus(`変換完了。ダウンロードが始まらない場合は「変換済CSVを再ダウンロード」を押してください。`);
     } catch (err) {
       console.error(err);
       setStatus(`処理エラー: ${err.message}`);
     } finally {
-      updateRunButton();
+      state.isProcessing = false;
     }
   }
 
+  function renderColumnSelector() {
+    els.columnList.innerHTML = '';
+    if (!state.config) return;
+    for (const mapping of state.config.mappings) {
+      const master = state.masters.masters[mapping.masterId];
+      const label = document.createElement('label');
+      label.className = 'checkItem';
+      const note = makeColumnNote(mapping, master);
+      label.innerHTML = `
+        <input type="checkbox" value="${escapeHtml(mapping.inputColumn)}" checked>
+        <span><strong>${escapeHtml(mapping.inputColumn)}</strong><small>${escapeHtml(note)}</small></span>
+      `;
+      const checkbox = label.querySelector('input');
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) state.selectedColumns.add(mapping.inputColumn);
+        else state.selectedColumns.delete(mapping.inputColumn);
+        updateColumnSummary();
+      });
+      els.columnList.appendChild(label);
+    }
+  }
+
+  function makeColumnNote(mapping, master) {
+    const parts = [];
+    parts.push(master ? master.name : mapping.masterId);
+    parts.push(mapping.multi ? '複数値あり' : '単一値');
+    if (mapping.inputSubCodeColumn) parts.push(`${mapping.inputSubCodeColumn}もセットで変換`);
+    return parts.join(' / ');
+  }
+
+  function updateColumnSummary() {
+    if (!state.config) return;
+    const total = state.config.mappings.length;
+    const selected = state.selectedColumns.size;
+    els.columnSummary.textContent = `${total}項目中 ${selected}項目を変換します`;
+  }
+
+  function setAllColumns(checked) {
+    state.selectedColumns = checked ? new Set(state.config.mappings.map(m => m.inputColumn)) : new Set();
+    els.columnList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = checked; });
+    updateColumnSummary();
+  }
+
+  function openColumnModal() {
+    els.columnModal.classList.remove('hidden');
+  }
+
+  function closeColumnModal() {
+    els.columnModal.classList.add('hidden');
+  }
+
   function transformTable(headers, rows, direction, outputMode) {
-    const mappings = state.config.mappings.filter(m => headers.includes(m.inputColumn));
-    const missingMappings = state.config.mappings.filter(m => !headers.includes(m.inputColumn));
+    const selectedMappings = state.config.mappings.filter(m => state.selectedColumns.has(m.inputColumn));
+    const mappings = selectedMappings.filter(m => headers.includes(m.inputColumn));
+    const missingMappings = selectedMappings.filter(m => !headers.includes(m.inputColumn));
     const errors = [];
     const outputRows = [];
     let changedCells = 0;
@@ -577,13 +674,16 @@
     return el ? el.value : '';
   }
 
-  function setDownload(blob, name) {
+  function setDownload(blob, name, autoClick = false) {
     revokeDownloadLink();
     const url = URL.createObjectURL(blob);
     els.downloadLink.href = url;
     els.downloadLink.download = name;
-    els.downloadLink.textContent = `変換済CSVをダウンロード（${name}）`;
+    els.downloadLink.textContent = `変換済CSVを再ダウンロード（${name}）`;
     els.downloadLink.classList.remove('hidden');
+    if (autoClick) {
+      setTimeout(() => els.downloadLink.click(), 0);
+    }
   }
 
   function revokeDownloadLink() {
