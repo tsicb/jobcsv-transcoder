@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSVエンコード・デコード変換ツール</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/encoding-japanese@2.2.0/encoding.min.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">GitHub Pages Static App</p>
+      <h1>CSVエンコード・デコード変換ツール</h1>
+      <p class="lead">求人CSVのコード値をマスタに基づいて変換します。対象外列はそのまま保持し、改行と&lt;BR&gt;の相互変換にも対応します。</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>1. CSVを選択</h2>
+      <label class="fileDrop" for="csvFile">
+        <input id="csvFile" type="file" accept=".csv,text/csv">
+        <span>CSVファイルを選択</span>
+        <small id="fileName">未選択</small>
+      </label>
+    </section>
+
+    <section class="card grid2">
+      <div>
+        <h2>2. 変換モード</h2>
+        <label class="radio"><input type="radio" name="direction" value="decode" checked> デコード（コード → 値）</label>
+        <label class="radio"><input type="radio" name="direction" value="encode"> エンコード（値 → コード）</label>
+      </div>
+      <div>
+        <h2>3. 出力モード</h2>
+        <label class="radio"><input type="radio" name="outputMode" value="overwrite" checked> 対象列を上書き</label>
+        <label class="radio"><input type="radio" name="outputMode" value="append"> 変換後列を追加</label>
+      </div>
+    </section>
+
+    <section class="card grid2">
+      <div>
+        <h2>4. 入力文字コード</h2>
+        <select id="inputEncoding">
+          <option value="auto" selected>自動判定</option>
+          <option value="UTF8">UTF-8</option>
+          <option value="SJIS">Shift_JIS / CP932</option>
+        </select>
+      </div>
+      <div>
+        <h2>5. 出力文字コード</h2>
+        <select id="outputEncoding">
+          <option value="same" selected>入力と同じ</option>
+          <option value="UTF8_BOM">UTF-8 with BOM</option>
+          <option value="SJIS">Shift_JIS / CP932</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="card actions">
+      <button id="runButton" class="primary" disabled>変換してCSVを作成</button>
+      <a id="downloadLink" class="download hidden" href="#" download>変換済CSVをダウンロード</a>
+      <button id="downloadLogButton" class="secondary hidden">エラーログCSVをダウンロード</button>
+    </section>
+
+    <section class="card statusCard">
+      <h2>処理状況</h2>
+      <div id="status" class="status">マスタ読み込み中...</div>
+      <div id="summary" class="summary"></div>
+    </section>
+
+    <section class="card hidden" id="errorSection">
+      <h2>未変換・注意一覧</h2>
+      <p class="note">未変換値は元の値を残しています。複数候補がある場合は自動変換していません。</p>
+      <div class="tableWrap">
+        <table id="errorTable">
+          <thead>
+            <tr>
+              <th>行</th>
+              <th>列</th>
+              <th>入力値</th>
+              <th>理由</th>
+              <th>候補</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>マスタ: <code>data/masters.json</code> ／ 変換設定: <code>data/transform-config.json</code></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
