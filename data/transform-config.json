@@ -1,0 +1,225 @@
+{
+  "version": "2026-06-14",
+  "multiDelimiter": "::",
+  "brToken": "<BR>",
+  "mappings": [
+    {
+      "inputColumn": "公開情報区分",
+      "masterId": "publish_status",
+      "codeColumn": "公開情報区分コード",
+      "valueColumn": "公開情報区分",
+      "multi": false
+    },
+    {
+      "inputColumn": "雇用形態区分",
+      "masterId": "employment_type",
+      "codeColumn": "雇用形態区分コード",
+      "valueColumn": "雇用形態区分",
+      "multi": false
+    },
+    {
+      "inputColumn": "職種コード",
+      "masterId": "job_category",
+      "codeColumn": "職種コード",
+      "valueColumn": "職種名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "給与区分",
+      "masterId": "salary_type",
+      "codeColumn": "給与区分コード",
+      "valueColumn": "給与区分",
+      "multi": false
+    },
+    {
+      "inputColumn": "県コード1",
+      "masterId": "prefecture",
+      "codeColumn": "都道府県コード",
+      "valueColumn": "都道府県名",
+      "multi": false
+    },
+    {
+      "inputColumn": "市区町村コード1",
+      "masterId": "municipality",
+      "codeColumn": "市区町村コード",
+      "valueColumn": "市区町村名",
+      "multi": false,
+      "masterSubCodeColumn": "市区町村コード対応都道府県コード",
+      "inputSubCodeColumn": "県コード1"
+    },
+    {
+      "inputColumn": "最寄駅コード1",
+      "masterId": "station",
+      "codeColumn": "最寄駅コード",
+      "valueColumn": "駅名",
+      "multi": false
+    },
+    {
+      "inputColumn": "県コード2",
+      "masterId": "prefecture",
+      "codeColumn": "都道府県コード",
+      "valueColumn": "都道府県名",
+      "multi": false
+    },
+    {
+      "inputColumn": "市区町村コード2",
+      "masterId": "municipality",
+      "codeColumn": "市区町村コード",
+      "valueColumn": "市区町村名",
+      "multi": false,
+      "masterSubCodeColumn": "市区町村コード対応都道府県コード",
+      "inputSubCodeColumn": "県コード2"
+    },
+    {
+      "inputColumn": "最寄駅コード2",
+      "masterId": "station",
+      "codeColumn": "最寄駅コード",
+      "valueColumn": "駅名",
+      "multi": false
+    },
+    {
+      "inputColumn": "県コード3",
+      "masterId": "prefecture",
+      "codeColumn": "都道府県コード",
+      "valueColumn": "都道府県名",
+      "multi": false
+    },
+    {
+      "inputColumn": "市区町村コード3",
+      "masterId": "municipality",
+      "codeColumn": "市区町村コード",
+      "valueColumn": "市区町村名",
+      "multi": false,
+      "masterSubCodeColumn": "市区町村コード対応都道府県コード",
+      "inputSubCodeColumn": "県コード3"
+    },
+    {
+      "inputColumn": "最寄駅コード3",
+      "masterId": "station",
+      "codeColumn": "最寄駅コード",
+      "valueColumn": "駅名",
+      "multi": false
+    },
+    {
+      "inputColumn": "県コードその他",
+      "masterId": "prefecture",
+      "codeColumn": "都道府県コード",
+      "valueColumn": "都道府県名",
+      "multi": false
+    },
+    {
+      "inputColumn": "市区町村コードその他",
+      "masterId": "municipality",
+      "codeColumn": "市区町村コード",
+      "valueColumn": "市区町村名",
+      "multi": false,
+      "masterSubCodeColumn": "市区町村コード対応都道府県コード",
+      "inputSubCodeColumn": "県コードその他"
+    },
+    {
+      "inputColumn": "最寄駅コードその他",
+      "masterId": "station",
+      "codeColumn": "最寄駅コード",
+      "valueColumn": "駅名",
+      "multi": false
+    },
+    {
+      "inputColumn": "特徴コード",
+      "masterId": "feature",
+      "codeColumn": "特徴コード",
+      "valueColumn": "特徴名（表示名）",
+      "multi": true
+    },
+    {
+      "inputColumn": "自分力バロメータコード1",
+      "masterId": "self_power_param",
+      "codeColumn": "自分力パラメータコード",
+      "valueColumn": "自分力パラメータ名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "自分力バロメータ値1",
+      "masterId": "self_power_value",
+      "codeColumn": "自分力パラメータ値",
+      "valueColumn": "自分力パラメータ値名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "自分力バロメータコード2",
+      "masterId": "self_power_param",
+      "codeColumn": "自分力パラメータコード",
+      "valueColumn": "自分力パラメータ名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "自分力バロメータ値2",
+      "masterId": "self_power_value",
+      "codeColumn": "自分力パラメータ値",
+      "valueColumn": "自分力パラメータ値名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "自分力バロメータコード3",
+      "masterId": "self_power_param",
+      "codeColumn": "自分力パラメータコード",
+      "valueColumn": "自分力パラメータ名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "自分力バロメータ値3",
+      "masterId": "self_power_value",
+      "codeColumn": "自分力パラメータ値",
+      "valueColumn": "自分力パラメータ値名（表示名）",
+      "multi": false
+    },
+    {
+      "inputColumn": "Indeed用求人関連タグ",
+      "masterId": "tag",
+      "codeColumn": "タグコード",
+      "valueColumn": "タグ名（表示名）",
+      "multi": true
+    },
+    {
+      "inputColumn": "固定残業代の有無",
+      "masterId": "fixed_overtime",
+      "codeColumn": "固定残業代有無コード",
+      "valueColumn": "固定残業代有無区分",
+      "multi": false
+    },
+    {
+      "inputColumn": "勤務形態",
+      "masterId": "work_style",
+      "codeColumn": "勤務形態コード",
+      "valueColumn": "勤務形態区分",
+      "multi": true
+    },
+    {
+      "inputColumn": "社会保険整備状況",
+      "masterId": "social_insurance",
+      "codeColumn": "社会保険整備状況コード",
+      "valueColumn": "社会保険整備状況区分",
+      "multi": true
+    },
+    {
+      "inputColumn": "給与区分(試用期間)",
+      "masterId": "salary_type",
+      "codeColumn": "給与区分コード",
+      "valueColumn": "給与区分",
+      "multi": false
+    },
+    {
+      "inputColumn": "固定残業代の有無(試用期間)",
+      "masterId": "fixed_overtime",
+      "codeColumn": "固定残業代有無コード",
+      "valueColumn": "固定残業代有無区分",
+      "multi": false
+    },
+    {
+      "inputColumn": "紹介先企業の雇用形態区分",
+      "masterId": "employment_type",
+      "codeColumn": "雇用形態区分コード",
+      "valueColumn": "雇用形態区分",
+      "multi": false
+    }
+  ]
+}
