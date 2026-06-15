@@ -180,7 +180,14 @@
     document.querySelectorAll('input[name="decodeBreakMode"]').forEach(input => {
       input.disabled = disabled;
     });
-    if (els.breakModeBlock) els.breakModeBlock.classList.toggle('disabledControl', disabled);
+    if (els.breakModeBlock) {
+      els.breakModeBlock.classList.toggle('disabledControl', disabled);
+      const segmented = els.breakModeBlock.querySelector('.segmented');
+      if (segmented) {
+        segmented.classList.toggle('disabledSegment', disabled);
+        segmented.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+      }
+    }
     if (els.breakModeNote) {
       els.breakModeNote.textContent = disabled
         ? '日本語→コードでは、改行は自動で <BR> に変換されます'

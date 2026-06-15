@@ -355,3 +355,80 @@ td:nth-child(3), td:nth-child(5) { max-width: 320px; overflow-wrap: anywhere; }
   color: #5f6970;
   font-weight: 700;
 }
+
+/* 2択トグル：スライドアニメーション */
+.segmented {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.segmented::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 6px;
+  left: 6px;
+  bottom: 6px;
+  width: calc((100% - 20px) / 2);
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  box-shadow: 0 8px 18px rgba(0, 122, 134, .24);
+  transform: translateX(0);
+  transition: transform .24s cubic-bezier(.2, .85, .25, 1), opacity .18s ease, background .18s ease;
+}
+.segmented:has(label:nth-child(2) input:checked)::before {
+  transform: translateX(calc(100% + 8px));
+}
+.segmented span {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  box-shadow: none;
+}
+.segmented input:checked + span {
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+}
+.segmented label:hover span {
+  color: #163642;
+}
+.segmented input:checked + span,
+.segmented label:hover input:checked + span {
+  color: #fff;
+}
+
+/* 日本語→コード時の改行設定：明確な非活性表示 */
+.controlBlock.disabledControl {
+  opacity: 1;
+}
+.controlBlock.disabledControl h2,
+.controlBlock.disabledControl .miniNote {
+  color: #7c858c;
+}
+.controlBlock.disabledControl .segmented {
+  cursor: not-allowed;
+  background: rgba(38, 49, 58, .075) !important;
+  border-color: rgba(38, 49, 58, .12) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.controlBlock.disabledControl .segmented::before {
+  opacity: 0 !important;
+}
+.controlBlock.disabledControl .segmented label {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.controlBlock.disabledControl .segmented span,
+.controlBlock.disabledControl .segmented input:checked + span,
+.controlBlock.disabledControl .segmented label:hover span {
+  color: #8d969d !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.controlBlock.disabledControl .miniNote {
+  font-weight: 800;
+}
+@media (max-width: 760px) {
+  .segmented { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
