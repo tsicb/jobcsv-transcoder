@@ -25,6 +25,8 @@
     clearAllColumns: document.getElementById('clearAllColumns'),
     columnList: document.getElementById('columnList'),
     columnSummary: document.getElementById('columnSummary'),
+    breakModeBlock: document.getElementById('breakModeBlock'),
+    breakModeNote: document.getElementById('breakModeNote'),
     downloadLink: document.getElementById('downloadLink'),
     downloadLogButton: document.getElementById('downloadLogButton'),
     status: document.getElementById('status'),
@@ -51,6 +53,7 @@
       state.selectedColumns = new Set(state.config.mappings.map(m => m.inputColumn));
       renderColumnSelector();
       updateColumnSummary();
+      updateBreakModeState();
       const sjisStatus = hasEncodingLib() ? '準備完了。CSVをアップロードしてください。' : '準備完了。ただし、Shift_JIS出力には外部ライブラリの読み込みが必要です。';
       setStatus(sjisStatus);
     } catch (err) {
@@ -65,6 +68,9 @@
       if (file) handleFileSelected(file);
     });
     els.downloadLogButton.addEventListener('click', () => downloadLogCsv());
+    document.querySelectorAll('input[name="direction"]').forEach(input => {
+      input.addEventListener('change', updateBreakModeState);
+    });
 
     els.openColumnModal.addEventListener('click', openColumnModal);
     els.closeColumnModal.addEventListener('click', closeColumnModal);
@@ -129,6 +135,7 @@
       setStatus('CSVを読み込んでいます...');
       const direction = getRadioValue('direction');
       const outputMode = getRadioValue('outputMode');
+      const decodeBreakMode = getRadioValue('decodeBreakMode') || 'br';
       const requestedInputEncoding = 'auto';
       const requestedOutputEncoding = 'same';
 
@@ -139,7 +146,7 @@
       if (!parsed.headers.length) throw new Error('CSVのヘッダー行を読み取れませんでした。');
 
       setStatus('変換しています...');
-      const result = transformTable(parsed.headers, parsed.rows, direction, outputMode);
+      const result = transformTable(parsed.headers, parsed.rows, direction, outputMode, decodeBreakMode);
       const finalText = stringifyCsv(result.headers, result.rows);
       const outputEncoding = chooseOutputEncoding(requestedOutputEncoding, state.detectedEncoding);
       const blob = encodeTextToBlob(finalText, outputEncoding);
@@ -155,6 +162,7 @@
         warningCount: result.errors.length,
         inputEncoding: state.detectedEncoding,
         outputEncoding,
+        breakMode: displayBreakMode(direction, decodeBreakMode),
       });
       renderErrors(result.errors);
       setStatus(`変換完了。ダウンロードが始まらない場合は「変換済CSVを再ダウンロード」を押してください。`);
@@ -163,6 +171,20 @@
       setStatus(`処理エラー: ${err.message}`);
     } finally {
       state.isProcessing = false;
+    }
+  }
+
+  function updateBreakModeState() {
+    const direction = getRadioValue('direction');
+    const disabled = direction === 'encode';
+    document.querySelectorAll('input[name="decodeBreakMode"]').forEach(input => {
+      input.disabled = disabled;
+    });
+    if (els.breakModeBlock) els.breakModeBlock.classList.toggle('disabledControl', disabled);
+    if (els.breakModeNote) {
+      els.breakModeNote.textContent = disabled
+        ? '日本語→コードでは、改行は自動で <BR> に変換されます'
+        : 'コード→日本語のときだけ選べます';
     }
   }
 
@@ -217,7 +239,7 @@
     els.columnModal.classList.add('hidden');
   }
 
-  function transformTable(headers, rows, direction, outputMode) {
+  function transformTable(headers, rows, direction, outputMode, decodeBreakMode) {
     const selectedMappings = state.config.mappings.filter(m => state.selectedColumns.has(m.inputColumn));
     const mappings = selectedMappings.filter(m => headers.includes(m.inputColumn));
     const missingMappings = selectedMappings.filter(m => !headers.includes(m.inputColumn));
@@ -270,7 +292,7 @@
       }
 
       for (const header of Object.keys(out)) {
-        out[header] = applyBrRule(out[header], direction);
+        out[header] = applyBrRule(out[header], direction, decodeBreakMode);
       }
 
       outputRows.push(out);
@@ -539,10 +561,13 @@
     return [...new Set(arr.filter(v => v !== undefined && v !== null).map(v => String(v)))];
   }
 
-  function applyBrRule(value, direction) {
+  function applyBrRule(value, direction, decodeBreakMode) {
     const text = String(value ?? '');
     if (direction === 'decode') {
-      return text.replace(/<br\s*\/?\s*>/gi, '\n');
+      if (decodeBreakMode === 'newline') {
+        return text.replace(/<br\s*\/?\s*>/gi, '\n');
+      }
+      return text;
     }
     return text.replace(/\r\n|\r|\n/g, '<BR>');
   }
@@ -701,6 +726,7 @@
       ['注意件数', summary.warningCount],
       ['入力文字コード', displayEncoding(summary.inputEncoding)],
       ['出力文字コード', displayEncoding(summary.outputEncoding)],
+      ['改行の扱い', summary.breakMode],
     ];
     for (const [label, value] of items) {
       const div = document.createElement('div');
@@ -755,6 +781,11 @@
     const base = name.replace(/\.csv$/i, '');
     const enc = encoding === 'SJIS' ? 'sjis' : 'utf8bom';
     return `${base}_${suffix}_${enc}.csv`;
+  }
+
+  function displayBreakMode(direction, decodeBreakMode) {
+    if (direction === 'encode') return '改行 → <BR>';
+    return decodeBreakMode === 'newline' ? '<BR> → 改行' : '<BR>のまま';
   }
 
   function displayEncoding(enc) {

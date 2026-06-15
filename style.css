@@ -100,8 +100,8 @@ h1 {
 h2 { margin: 0 0 12px; font-size: 18px; color: #22313b; }
 .controlsCard {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
 }
 .controlBlock { min-width: 0; }
 .segmented {
@@ -309,6 +309,10 @@ td:nth-child(3), td:nth-child(5) { max-width: 320px; overflow-wrap: anywhere; }
   border-bottom: 0;
   background: rgba(255, 250, 243, .90);
 }
+@media (max-width: 900px) {
+  .controlsCard { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 760px) {
   body {
     background:
@@ -324,4 +328,30 @@ td:nth-child(3), td:nth-child(5) { max-width: 320px; overflow-wrap: anywhere; }
   .controlsCard { grid-template-columns: 1fr; }
   .columnCard { align-items: stretch; flex-direction: column; }
   .segmented { grid-template-columns: 1fr; }
+}
+
+/* 改行設定トグル */
+.miniNote {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.controlBlock.disabledControl {
+  opacity: .58;
+}
+.controlBlock.disabledControl .segmented {
+  background: rgba(38, 49, 58, .06);
+}
+.controlBlock.disabledControl .segmented span {
+  color: #7a838a;
+}
+.controlBlock.disabledControl .segmented input:checked + span {
+  background: rgba(38, 49, 58, .16);
+  color: #5f6970;
+  box-shadow: none;
+}
+.controlBlock.disabledControl .miniNote {
+  color: #5f6970;
+  font-weight: 700;
 }

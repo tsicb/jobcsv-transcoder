@@ -31,6 +31,14 @@
           <label><input type="radio" name="outputMode" value="append"><span>変換後列を追加</span></label>
         </div>
       </div>
+      <div class="controlBlock" id="breakModeBlock">
+        <h2>改行の扱い</h2>
+        <div class="segmented" role="radiogroup" aria-label="改行の扱い">
+          <label><input type="radio" name="decodeBreakMode" value="br" checked><span>&lt;BR&gt;のまま</span></label>
+          <label><input type="radio" name="decodeBreakMode" value="newline"><span>改行にする</span></label>
+        </div>
+        <p id="breakModeNote" class="miniNote">コード→日本語のときだけ選べます</p>
+      </div>
     </section>
 
     <section class="card columnCard">
